@@ -1,0 +1,79 @@
+service:
+  name: ts-serverless
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    #includeModules: true
+    includeModules: 
+      forceExclude:
+        - aws-sdk
+  serverless-offline-sns:
+    port: 4002
+    debug: true
+  snsHostURL:
+    local:
+      http://127.0.0.1:4002
+  mySnsTopic: "${self:service}-${self:provider.stage}-sns-consume"
+  mySnsTopicArn:
+    local:
+      "arn:aws:sns:eu-west-1:123456789012:${self:custom.mySnsTopic}"
+    dev:
+      { "Fn::Join" : ["", ["arn:aws:sns:${self:provider.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.mySnsTopic}" ] ]  }
+    prod:
+      { "Fn::Join" : ["", ["arn:aws:sns:${self:provider.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.mySnsTopic}" ] ]  }
+  serverless-iam-roles-per-function:
+    defaultInherit: true # Each function will inherit the service level roles too.
+  prune:
+    automatic: true
+    number: 3
+
+package:
+  individually: true
+
+plugins:
+  - serverless-webpack
+  - serverless-iam-roles-per-function
+  - serverless-prune-plugin
+  - serverless-offline
+  - serverless-offline-sns
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  frameworkVersion: ‘1.64.1’
+  stage: ${opt:stage, 'local'}
+  region: ${opt:region, 'eu-west-1'}
+  apiGateway:
+    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+  environment:
+    DEBUG: '*'
+    NODE_ENV: ${self:provider.stage}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+  tracing:
+    lambda: false
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - SNS:Publish
+      Resource: { "Fn::Join" : ["", ["arn:aws:sns:${self:provider.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.mySnsTopic}" ] ]  }
+
+functions:
+  hello:
+    handler: src/handler.hello
+    events:
+      - http:
+          method: get
+          path: hello
+    environment:
+      PUBLISH_TOPIC_ARN: ${self:custom.mySnsTopicArn.${self:provider.stage}}
+      SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+  listener:
+    handler: src/listener.listen
+    events:
+      - sns: ${self:custom.mySnsTopic}
