@@ -85,6 +85,22 @@ functions:
         Action: SNS:Publish
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
+  hackernews:
+    handler: src/handlers/hackerNewsHandler.findPosts
+    name: "hackernews-scrapper-${self:provider.stage}"
+    memorySize: 256
+    events:
+      - http:
+          method: get
+          path: hackernews
+    environment:
+      PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
+      SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+    iamRoleStatements:
+      - Effect: Allow
+        Action: SNS:Publish
+        Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
+
   devto:
     handler: src/handlers/devtoHandler.findPosts
     name: "devto-scrapper-${self:provider.stage}"

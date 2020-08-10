@@ -5,9 +5,13 @@ import Twit from 'twit';
 import { Post } from '@src/post';
 
 const twitterConf = {
+  // eslint-disable-next-line @typescript-eslint/camelcase
   consumer_key: process.env.TWITTER_APP_API_KEY,
+  // eslint-disable-next-line @typescript-eslint/camelcase
   consumer_secret: process.env.TWITTER_APP_API_SECRET,
+  // eslint-disable-next-line @typescript-eslint/camelcase
   access_token: process.env.TWITTER_APP_ACCESS_TOKEN_KEY,
+  // eslint-disable-next-line @typescript-eslint/camelcase
   access_token_secret: process.env.TWITTER_APP_ACCESS_TOKEN_SECRET,
 };
 
@@ -32,7 +36,9 @@ export const publish: SNSHandler = async (_event, _context) => {
     if (posts.length > 0) {
       console.debug('Tweeting...');
       const tw = new Twit(twitterConf);
-      for (const post of posts.slice(0, 2)) { //Await doesn't work as expected with .forEach
+      // eslint-disable-next-line no-restricted-syntax
+      for (const post of posts.slice(0, 2)) { // Await doesn't work as expected with .forEach
+        // eslint-disable-next-line no-await-in-loop
         await tw.post('statuses/update', { status: formatTweet(post) });
       }
       console.debug('Tweets sent');

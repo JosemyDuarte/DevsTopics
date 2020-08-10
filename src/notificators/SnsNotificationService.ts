@@ -12,7 +12,7 @@ export class SnsNotificationService implements NotificationService {
       this.topicArn = topicArn;
     }
 
-    async publish(item: any): Promise<void> {
+    async publish(item: unknown): Promise<void> {
       const message = JSON.stringify(item);
       console.debug(`Received item [${message}] to publish to [${this.topicArn}]`);
       const req = {

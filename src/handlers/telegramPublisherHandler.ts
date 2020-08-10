@@ -18,7 +18,7 @@ export const publish: SNSHandler = async (_event, _context) => {
     const posts: Post[] = JSON.parse(rawSnsMessage) as Post[];
     console.info(`Received ${posts.length} posts`);
     if (posts.length > 0) {
-      await bot.telegram.sendMessage(channelId, `We have this news for you today ${new Date().toISOString().slice(0, 10)}:`);
+      await bot.telegram.sendMessage(channelId, `We have this posts for you today ${new Date().toISOString().slice(0, 10)}:`);
       await posts.slice(0, 5).map((post) => post.url)
         .forEach((url) => bot.telegram.sendMessage(channelId, url));
       console.debug('Message sent');

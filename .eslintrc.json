@@ -14,9 +14,6 @@
   "root": true,
   "globals": {},
   "rules": {
-    "@typescript-eslint/camelcase": ["warn"],
-    "no-restricted-syntax": ["warn"],
-    "no-await-in-loop": ["warn"],
     "no-console": "off",
     "import/no-unresolved": [
       2,
