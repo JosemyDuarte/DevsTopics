@@ -1,32 +1,5 @@
 service:
-  name: ts-serverless
-
-custom:
-  webpack:
-    webpackConfig: ./webpack.config.js
-    #includeModules: true
-    includeModules: 
-      forceExclude:
-        - aws-sdk
-  serverless-offline-sns:
-    port: 4002
-    debug: true
-  snsHostURL:
-    local:
-      http://127.0.0.1:4002
-  mySnsTopic: "${self:service}-${self:provider.stage}-sns-consume"
-  mySnsTopicArn:
-    local:
-      "arn:aws:sns:eu-west-1:123456789012:${self:custom.mySnsTopic}"
-    dev:
-      { "Fn::Join" : ["", ["arn:aws:sns:${self:provider.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.mySnsTopic}" ] ]  }
-    prod:
-      { "Fn::Join" : ["", ["arn:aws:sns:${self:provider.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.mySnsTopic}" ] ]  }
-  serverless-iam-roles-per-function:
-    defaultInherit: true # Each function will inherit the service level roles too.
-  prune:
-    automatic: true
-    number: 3
+  name: TechTrendingTopics
 
 package:
   individually: true
@@ -35,14 +8,49 @@ plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-prune-plugin
-  - serverless-offline
   - serverless-offline-sns
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom: ${file(./serverless.env.yml)}
+
+resources:
+  Resources:
+    postsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tables.posts.name}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: site
+            AttributeType: S
+          - AttributeName: publishedAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:custom.tables.posts.indexes.publishedAtAndSite}
+            KeySchema:
+              - AttributeName: site
+                KeyType: HASH
+              - AttributeName: publishedAt
+                KeyType: RANGE
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+            Projection:
+              ProjectionType: ALL
 
 provider:
   name: aws
   runtime: nodejs12.x
   frameworkVersion: ‘1.64.1’
-  stage: ${opt:stage, 'local'}
+  stage: ${opt:stage, 'development'}
   region: ${opt:region, 'eu-west-1'}
   apiGateway:
     minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
@@ -50,6 +58,7 @@ provider:
     DEBUG: '*'
     NODE_ENV: ${self:provider.stage}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    SLS_DEBUG: '*'
   tracing:
     lambda: false
   iamRoleStatements:
@@ -58,22 +67,116 @@ provider:
         - xray:PutTraceSegments
         - xray:PutTelemetryRecords
       Resource: "*"
-    - Effect: Allow
-      Action:
-        - SNS:Publish
-      Resource: { "Fn::Join" : ["", ["arn:aws:sns:${self:provider.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.mySnsTopic}" ] ]  }
 
 functions:
-  hello:
-    handler: src/handler.hello
+  hackernoon:
+    handler: src/handlers/hackerNoonHandler.findPosts
+    name: "hackernoon-scrapper-${self:provider.stage}"
+    memorySize: 256
     events:
       - http:
           method: get
-          path: hello
+          path: hackernoon
     environment:
-      PUBLISH_TOPIC_ARN: ${self:custom.mySnsTopicArn.${self:provider.stage}}
+      PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
       SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
-  listener:
-    handler: src/listener.listen
+    iamRoleStatements:
+      - Effect: Allow
+        Action: SNS:Publish
+        Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
+
+  devto:
+    handler: src/handlers/devtoHandler.findPosts
+    name: "devto-scrapper-${self:provider.stage}"
+    memorySize: 256
     events:
-      - sns: ${self:custom.mySnsTopic}
+      - http:
+          method: get
+          path: devto
+    environment:
+      PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
+      SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+    iamRoleStatements:
+      - Effect: Allow
+        Action: SNS:Publish
+        Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
+
+  infoq:
+    handler: src/handlers/infoqHandler.findPosts
+    name: "infoq-scrapper-${self:provider.stage}"
+    memorySize: 256
+    events:
+      - http:
+          method: get
+          path: infoq
+    environment:
+      PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
+      SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+    iamRoleStatements:
+      - Effect: Allow
+        Action: SNS:Publish
+        Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
+
+  postsListener:
+    handler: src/handlers/postsListenerHandler.listen
+    name: "posts-listener-${self:provider.stage}"
+    memorySize: 256
+    environment:
+      POSTS_TABLE_NAME: ${self:custom.tables.posts.name}
+      DYNAMODB_ENDPOINT_URL: ${self:custom.dynamodb.endpoint.${self:provider.stage}}
+    events:
+      - sns:
+          displayName: ${self:custom.newPostsFoundSnsTopic}
+          topicName: ${self:custom.newPostsFoundSnsTopic}
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action: dynamodb:PutItem
+        Resource: { "Fn::Join": ["", ["arn:aws:dynamodb:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":table/${self:custom.tables.posts.name}" ] ]  }
+
+  postPromoter:
+    handler: src/handlers/simplePostFanHandler.publish
+    name: "post-promoter-${self:provider.stage}"
+    memorySize: 200
+    environment:
+      POSTS_TABLE_NAME: ${self:custom.tables.posts.name}
+      POSTS_PUBLISHED_AT_SITE_INDEX_NAME: ${self:custom.tables.posts.indexes.publishedAtAndSite}
+      DYNAMODB_ENDPOINT_URL: ${self:custom.dynamodb.endpoint.${self:provider.stage}}
+      PUBLISH_TOPIC_ARN: ${self:custom.newPostCandidateToPublishTopicArn.${self:provider.stage}}
+      SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+    events:
+      - http:
+          method: get
+          path: promoter
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action: dynamodb:Query
+        Resource: { "Fn::Join": ["", ["arn:aws:dynamodb:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":table/${self:custom.tables.posts.name}/index/${self:custom.tables.posts.indexes.publishedAtAndSite}" ] ]  }
+      - Effect: Allow
+        Action: SNS:Publish
+        Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostCandidateToPublishTopic}" ] ]  }
+
+  telegramPublisher:
+    handler: src/handlers/telegramPublisherHandler.publish
+    name: "telegram-publisher-${self:provider.stage}"
+    memorySize: 200
+    environment:
+      TELEGRAM_CHANNEL_ID: ${self:custom.TELEGRAM_CHANNEL_ID}
+      TELEGRAM_BOT_TOKEN: ${self:custom.TELEGRAM_BOT_TOKEN}
+    events:
+      - sns:
+          displayName: ${self:custom.newPostCandidateToPublishTopic}
+          topicName: ${self:custom.newPostCandidateToPublishTopic}
+
+  twitterPublisher:
+    handler: src/handlers/twitterPublisherHandler.publish
+    name: "twitter-publisher-${self:provider.stage}"
+    memorySize: 200
+    environment:
+      TWITTER_APP_API_KEY: ${self:custom.TWITTER_APP_API_KEY}
+      TWITTER_APP_API_SECRET: ${self:custom.TWITTER_APP_API_SECRET}
+      TWITTER_APP_ACCESS_TOKEN_KEY: ${self:custom.TWITTER_APP_ACCESS_TOKEN_KEY}
+      TWITTER_APP_ACCESS_TOKEN_SECRET: ${self:custom.TWITTER_APP_ACCESS_TOKEN_SECRET}
+    events:
+      - sns:
+          displayName: ${self:custom.newPostCandidateToPublishTopic}
+          topicName: ${self:custom.newPostCandidateToPublishTopic}

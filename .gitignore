@@ -9,3 +9,9 @@ jspm_packages
 .webpack
 
 .eslintcache
+.dynamodb/
+.idea/
+.vscode/
+
+serverless.env.yml
+yarn-error.log
