@@ -15,10 +15,23 @@ const twitterConf = {
   access_token_secret: process.env.TWITTER_APP_ACCESS_TOKEN_SECRET,
 };
 
+const CODING_HASHTAGS = ['#programming', '#Developer', '#code', '#tech',
+  '#programmer', '#software', '#coding', '#Engineering', '#news',
+  '#skills', '#computer'];
+
+const TWEET_MAX_LENGTH = 280;
+
+function appendHashTags(post: Post): string {
+  const maxHashtagLength: number = Math.max(...(CODING_HASHTAGS.map((hashtag) => hashtag.length)));
+  const titleAndUrlLength: number = `${post.title} ${post.url}`.length;
+  const canAppendHashtag = maxHashtagLength + titleAndUrlLength + 3 < TWEET_MAX_LENGTH;
+  return canAppendHashtag ? `${post.title}\n${CODING_HASHTAGS.sort(() => Math.random() - 0.5)[0]}\n${post.url}` : `${post.title} ${post.url}`;
+}
+
 function formatTweet(post: Post): string {
   console.debug(`Title length: [${post.title.length}]`);
   console.debug(`Url length: [${post.url.length}]`);
-  const tweet = `${post.title} ${post.url}`.length >= 280 ? `${post.title.substring(0, `${post.title} ${post.url}`.length - 280)} ${post.url}` : `${post.title} ${post.url}`;
+  const tweet = `${post.title} ${post.url}`.length >= TWEET_MAX_LENGTH ? `${post.title.substring(0, `${post.title} ${post.url}`.length - TWEET_MAX_LENGTH)} ${post.url}` : appendHashTags(post);
   console.debug(`Result length: [${tweet.length}]`);
   console.debug(`Tweet: [${tweet}]`);
   return tweet;
