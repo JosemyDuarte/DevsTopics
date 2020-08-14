@@ -4,8 +4,9 @@
       "es2017"
     ],
     "removeComments": true,
+    "experimentalDecorators": true,
     "moduleResolution": "node",
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "noUnusedParameters": true,
     "sourceMap": true,
     "target": "es2017",

@@ -6,9 +6,9 @@ export interface Post {
     url: string;
     site: Site;
     publishedAt: Date;
-    categories: string[];
-    author: string;
-    content: string;
+    categories?: string[];
+    author?: string;
+    content?: string;
 }
 
 export class DynamoPost {

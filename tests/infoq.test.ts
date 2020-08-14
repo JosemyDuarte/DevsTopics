@@ -1,4 +1,4 @@
-import { findPosts } from '@src/handlers/infoqHandler';
+import { findPosts } from '@src/sources/infoqHandler';
 
 describe('lets', () => {
   it('should work', async () => {

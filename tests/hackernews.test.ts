@@ -1,4 +1,4 @@
-import { findPosts } from '@src/handlers/hackerNewsHandler';
+import { findPosts } from '@src/sources/hackerNewsHandler';
 
 describe('lets', () => {
   it('should work', async () => {

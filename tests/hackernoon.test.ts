@@ -1,4 +1,4 @@
-import { findPosts } from '@src/handlers/hackerNoonHandler';
+import { findPosts } from '@src/sources/hackerNoonHandler';
 
 describe('lets', () => {
   it('should work', () => {

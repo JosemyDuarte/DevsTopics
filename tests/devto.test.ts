@@ -1,4 +1,4 @@
-import { findPosts } from '@src/handlers/devtoHandler';
+import { findPosts } from '@src/sources/devtoHandler';
 
 describe('lets', () => {
   it('should work', async () => {

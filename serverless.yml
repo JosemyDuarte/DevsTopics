@@ -70,7 +70,7 @@ provider:
 
 functions:
   hackernoon:
-    handler: src/handlers/hackerNoonHandler.findPosts
+    handler: src/sources/hackerNoonHandler.findPosts
     name: "hackernoon-scrapper-${self:provider.stage}"
     memorySize: 256
     events:
@@ -86,7 +86,7 @@ functions:
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
   hackernews:
-    handler: src/handlers/hackerNewsHandler.findPosts
+    handler: src/sources/hackerNewsHandler.findPosts
     name: "hackernews-scrapper-${self:provider.stage}"
     memorySize: 256
     events:
@@ -102,7 +102,7 @@ functions:
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
   devto:
-    handler: src/handlers/devtoHandler.findPosts
+    handler: src/sources/devtoHandler.findPosts
     name: "devto-scrapper-${self:provider.stage}"
     memorySize: 256
     events:
@@ -118,7 +118,7 @@ functions:
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
   infoq:
-    handler: src/handlers/infoqHandler.findPosts
+    handler: src/sources/infoqHandler.findPosts
     name: "infoq-scrapper-${self:provider.stage}"
     memorySize: 256
     events:
@@ -134,7 +134,7 @@ functions:
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
   postsListener:
-    handler: src/handlers/postsListenerHandler.listen
+    handler: src/management/postsListenerHandler.listen
     name: "posts-listener-${self:provider.stage}"
     memorySize: 256
     environment:
@@ -150,7 +150,7 @@ functions:
         Resource: { "Fn::Join": ["", ["arn:aws:dynamodb:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":table/${self:custom.tables.posts.name}" ] ]  }
 
   postPromoter:
-    handler: src/handlers/simplePostFanHandler.publish
+    handler: src/management/simplePostFanHandler.publish
     name: "post-promoter-${self:provider.stage}"
     memorySize: 200
     environment:
@@ -172,19 +172,20 @@ functions:
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostCandidateToPublishTopic}" ] ]  }
 
   telegramPublisher:
-    handler: src/handlers/telegramPublisherHandler.publish
+    handler: src/promoters/telegram/telegramPublisherHandler.publish
     name: "telegram-publisher-${self:provider.stage}"
     memorySize: 200
     environment:
       TELEGRAM_CHANNEL_ID: ${self:custom.TELEGRAM_CHANNEL_ID}
       TELEGRAM_BOT_TOKEN: ${self:custom.TELEGRAM_BOT_TOKEN}
+      TELEGRAM_MAX_NUMBER_OF_MESSAGES: 3
     events:
       - sns:
           displayName: ${self:custom.newPostCandidateToPublishTopic}
           topicName: ${self:custom.newPostCandidateToPublishTopic}
 
   twitterPublisher:
-    handler: src/handlers/twitterPublisherHandler.publish
+    handler: src/promoters/twitter/twitterPublisherHandler.publish
     name: "twitter-publisher-${self:provider.stage}"
     memorySize: 200
     environment:
@@ -192,6 +193,8 @@ functions:
       TWITTER_APP_API_SECRET: ${self:custom.TWITTER_APP_API_SECRET}
       TWITTER_APP_ACCESS_TOKEN_KEY: ${self:custom.TWITTER_APP_ACCESS_TOKEN_KEY}
       TWITTER_APP_ACCESS_TOKEN_SECRET: ${self:custom.TWITTER_APP_ACCESS_TOKEN_SECRET}
+      TWITTER_TWEET_MAX_LENGTH: 280
+      TWITTER_MAX_NUMBER_OF_TWEETS: 3
     events:
       - sns:
           displayName: ${self:custom.newPostCandidateToPublishTopic}
