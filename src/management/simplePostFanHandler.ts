@@ -6,6 +6,14 @@ import { Site } from '@src/site';
 import { Post } from '@src/post';
 import { SnsNotificationService } from '@src/notificators/SnsNotificationService';
 
+function getYesterday(): Date {
+  function previousDayFrom(date: Date): Date {
+    return new Date(date.setDate(date.getDate() - 1));
+  }
+
+  return previousDayFrom(new Date());
+}
+
 const publishPost: (posts: Post[]) => Promise<void> = async (posts: Post[]) => {
   const snsEndpoint = process.env.SNS_ENDPOINT_URL || undefined;
   console.debug(`SNS endpoint [${snsEndpoint}]`);
@@ -33,7 +41,7 @@ export const publish: APIGatewayProxyHandlerV2 = async (_event, _context) => {
 
   const dynamoPostRepository = new DynamoPostReaderRepository(postTableName, publishedAtSiteIndexName, dynamoOptions);
   try {
-    const posts: Post[] = await dynamoPostRepository.search(new Date(), Site.HACKERNOON);
+    const posts: Post[] = await dynamoPostRepository.search(getYesterday(), Site.HACKERNEWS);
     await publishPost(posts);
     return { statusCode: 200, body: JSON.stringify(posts) };
   } catch (error) {

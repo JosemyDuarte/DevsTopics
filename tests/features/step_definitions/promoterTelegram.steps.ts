@@ -31,8 +31,6 @@ Given(/^a list of "([^"]*)" posts$/, (numberOfPosts: number) => {
       site: Site.HACKERNEWS,
       publishedAt: new Date(),
     }) as Post);
-
-  console.debug(this.posts);
 });
 
 Given(/^an empty list of posts$/, () => {

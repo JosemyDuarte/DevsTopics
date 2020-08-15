@@ -26,5 +26,6 @@ export const listen: SNSHandler = async (_event, _context) => {
     await dynamoPostRepository.save(item);
   } catch (e) {
     console.error(`Booom [ ${e.message} ]`);
+    throw e;
   }
 };

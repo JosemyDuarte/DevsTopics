@@ -1,7 +1,7 @@
 const env = {
   AWS_REGION: 'local',
   AWS_ACCESS_KEY: 'fake_key',
-  AWS_SECRET_KEY: 'fake_secret',
+  RSS_FEED_URL: 'https://hnrss.org/newest?points=100',
 };
 
 process.env = {

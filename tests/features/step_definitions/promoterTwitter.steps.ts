@@ -31,8 +31,6 @@ Given('a list of {int} posts to tweet', (numberOfPosts: number) => {
       site: Site.HACKERNEWS,
       publishedAt: new Date(),
     }) as Post);
-
-  console.debug(this.posts);
 });
 
 Given('a limit of {int} characters for tweets', (maxLengthOfTweets: number) => {

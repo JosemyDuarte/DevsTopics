@@ -46,7 +46,7 @@ export class TwitterPublisherUseCase {
     console.debug(`Url length: [${post.url.length}]`);
     const tweet = `${post.title} ${post.url}`.length >= this.tweetMaxLength ? `${post.title.substring(0, `${post.title} ${post.url}`.length - this.tweetMaxLength)} ${post.url}` : this.appendHashTags(post);
     console.debug(`Result length: [${tweet.length}]`);
-    console.debug(`Tweet: [${tweet}]`);
+    console.debug(`Tweet: [${tweet.replace('\n', ' ')}]`);
     return tweet;
   }
 }

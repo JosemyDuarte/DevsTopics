@@ -1,3 +1,3 @@
 export interface NotificationService {
-    publish(item: never): Promise<void>;
+    publish(item: unknown): Promise<void>;
 }

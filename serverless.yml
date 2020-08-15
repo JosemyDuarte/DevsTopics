@@ -70,7 +70,7 @@ provider:
 
 functions:
   hackernoon:
-    handler: src/sources/hackerNoonHandler.findPosts
+    handler: src/sources/hackerNoon/hackerNoonHandler.findPosts
     name: "hackernoon-scrapper-${self:provider.stage}"
     memorySize: 256
     events:
@@ -80,13 +80,14 @@ functions:
     environment:
       PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
       SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+      RSS_FEED_URL: "https://hackernoon.com/feed"
     iamRoleStatements:
       - Effect: Allow
         Action: SNS:Publish
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
   hackernews:
-    handler: src/sources/hackerNewsHandler.findPosts
+    handler: src/sources/hackerNews/hackerNewsHandler.findPosts
     name: "hackernews-scrapper-${self:provider.stage}"
     memorySize: 256
     events:
@@ -96,13 +97,14 @@ functions:
     environment:
       PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
       SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+      RSS_FEED_URL: "https://hnrss.org/newest?points=100"
     iamRoleStatements:
       - Effect: Allow
         Action: SNS:Publish
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
   devto:
-    handler: src/sources/devtoHandler.findPosts
+    handler: src/sources/devTo/devToHandler.findPosts
     name: "devto-scrapper-${self:provider.stage}"
     memorySize: 256
     events:
@@ -112,13 +114,14 @@ functions:
     environment:
       PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
       SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+      RSS_FEED_URL: "https://dev.to/feed"
     iamRoleStatements:
       - Effect: Allow
         Action: SNS:Publish
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
   infoq:
-    handler: src/sources/infoqHandler.findPosts
+    handler: src/sources/infoQ/infoQHandler.findPosts
     name: "infoq-scrapper-${self:provider.stage}"
     memorySize: 256
     events:
@@ -128,6 +131,7 @@ functions:
     environment:
       PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
       SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+      RSS_FEED_URL: "https://feed.infoq.com/"
     iamRoleStatements:
       - Effect: Allow
         Action: SNS:Publish
