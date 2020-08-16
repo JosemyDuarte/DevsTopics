@@ -25,11 +25,9 @@ export class TwitterPublisherUseCase {
       return Promise.resolve();
     }
     console.debug('Tweeting...');
-    // eslint-disable-next-line no-restricted-syntax
-    for (const post of posts.slice(0, this.maxNumberOfTweets)) { // Await doesn't work as expected with .forEach
-      // eslint-disable-next-line no-await-in-loop
-      await this.twitterClient.tweet(this.formatTweet(post));
-    }
+    await Promise.all(posts.slice(0, this.maxNumberOfTweets)
+      .map((post) => this.twitterClient.tweet(this.formatTweet(post))));
+
     console.debug('Tweets sent');
     return Promise.resolve();
   }

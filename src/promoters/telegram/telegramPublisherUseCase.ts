@@ -18,12 +18,8 @@ export class TelegramPublisherUseCase {
       return Promise.resolve();
     }
 
-    await this.telegramClient.send(`We have this posts for you today ${new Date().toISOString().slice(0, 10)}:`);
-    // eslint-disable-next-line no-restricted-syntax
-    for (const url of posts.slice(0, this.maxMessagesToPublish).map((post) => post.url)) {
-      // eslint-disable-next-line no-await-in-loop
-      await this.telegramClient.send(url);
-    }
+    await Promise.all(await posts.slice(0, this.maxMessagesToPublish)
+      .map((post) => this.telegramClient.send(post.url)));
 
     console.debug('Messages sent');
     return Promise.resolve();

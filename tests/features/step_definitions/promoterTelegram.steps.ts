@@ -51,7 +51,7 @@ Then(/^no message should be sent$/, () => {
   verify(this.telegramClient.send(anyString())).never();
 });
 
-Then(/^including introduction message, "([^"]*)" messages should have been sent$/, (numberOfMessagesSent: number) => {
+Then('{int} telegram messages should have been sent', (numberOfMessagesSent: number) => {
   verify(this.telegramClient.send(anyString())).times(Number(numberOfMessagesSent));
 });
 
