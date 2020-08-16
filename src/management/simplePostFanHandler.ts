@@ -41,7 +41,7 @@ export const publish: APIGatewayProxyHandlerV2 = async (_event, _context) => {
 
   const dynamoPostRepository = new DynamoPostReaderRepository(postTableName, publishedAtSiteIndexName, dynamoOptions);
   try {
-    const posts: Post[] = await dynamoPostRepository.search(getYesterday(), Site.HACKERNEWS);
+    const posts: Post[] = await dynamoPostRepository.search(getYesterday(), Site.DZONE);
     await publishPost(posts);
     return { statusCode: 200, body: JSON.stringify(posts) };
   } catch (error) {

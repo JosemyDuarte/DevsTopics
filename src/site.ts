@@ -3,4 +3,5 @@ export enum Site {
     DEVTO = 'DEV.TO',
     INFOQ = 'INFOQ',
     HACKERNEWS = 'HACKERNEWS',
+    DZONE = 'DZONE',
 }

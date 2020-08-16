@@ -137,6 +137,23 @@ functions:
         Action: SNS:Publish
         Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
 
+  dZone:
+    handler: src/sources/dZone/dZoneHandler.findPosts
+    name: "dzone-scrapper-${self:provider.stage}"
+    memorySize: 256
+    events:
+      - http:
+          method: get
+          path: dzone
+    environment:
+      PUBLISH_TOPIC_ARN: ${self:custom.newPostsFoundSnsTopicArn.${self:provider.stage}}
+      SNS_ENDPOINT_URL: ${self:custom.snsHostURL.${self:provider.stage}}
+      RSS_FEED_URL: "http://feeds.dzone.com/home"
+    iamRoleStatements:
+      - Effect: Allow
+        Action: SNS:Publish
+        Resource: { "Fn::Join": ["", ["arn:aws:sns:${self:provider.region}:", { "Ref": "AWS::AccountId" }, ":${self:custom.newPostsFoundSnsTopic}" ] ]  }
+
   postsListener:
     handler: src/management/postsListenerHandler.listen
     name: "posts-listener-${self:provider.stage}"
