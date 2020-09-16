@@ -20,7 +20,7 @@
   "dependencies": {
     "aws-lambda": "^1.0.5",
     "aws-sdk": "^2.627.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "rss-parser": "^3.9.0",
     "source-map-support": "^0.5.10",
     "telegraf": "^3.38.0",
